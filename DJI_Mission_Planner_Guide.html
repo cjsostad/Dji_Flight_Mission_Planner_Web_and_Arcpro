@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>DJI Mission Planner — User Guide v5</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Inter:wght@300;400;500;600&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0d1117; --panel: #161b22; --border: #30363d;
+  --accent: #f0a500; --accent2: #2ea8d5; --text: #e6edf3;
+  --muted: #8b949e; --code-bg: #21262d;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg); color: var(--text);
+  line-height: 1.65; font-size: 15px;
+}
+.container { max-width: 880px; margin: 0 auto; padding: 40px 32px; }
+h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 36px; font-weight: 700;
+  color: var(--accent); margin-bottom: 4px;
+  letter-spacing: 1px; text-transform: uppercase;
+}
+h1 + .sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; color: var(--muted);
+  margin-bottom: 32px;
+}
+h2 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 24px; font-weight: 600;
+  color: var(--accent2); margin-top: 36px; margin-bottom: 14px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  letter-spacing: 0.5px;
+}
+h3 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 18px; font-weight: 600;
+  color: var(--text); margin-top: 24px; margin-bottom: 8px;
+}
+p { margin-bottom: 14px; color: var(--text); }
+a { color: var(--accent2); text-decoration: none; }
+a:hover { text-decoration: underline; }
+ul, ol { margin: 8px 0 16px 24px; }
+li { margin-bottom: 6px; }
+code {
+  font-family: 'Share Tech Mono', monospace;
+  background: var(--code-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 1px 6px; font-size: 13px;
+  color: var(--accent);
+}
+pre {
+  background: var(--code-bg); border: 1px solid var(--border);
+  border-radius: 4px; padding: 12px 16px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13px; overflow-x: auto;
+  margin: 12px 0;
+}
+.callout {
+  background: rgba(46,168,213,0.08);
+  border-left: 3px solid var(--accent2);
+  padding: 12px 16px; margin: 16px 0; border-radius: 0 3px 3px 0;
+}
+.callout.warn {
+  background: rgba(240,165,0,0.08);
+  border-left-color: var(--accent);
+}
+.callout.danger {
+  background: rgba(248,81,73,0.08);
+  border-left-color: #f85149;
+}
+.callout strong { color: var(--accent); }
+table {
+  width: 100%; border-collapse: collapse;
+  margin: 12px 0; font-size: 14px;
+}
+th, td {
+  padding: 8px 12px; text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+th {
+  background: var(--code-bg);
+  font-family: 'Rajdhani', sans-serif;
+  text-transform: uppercase;
+  font-size: 12px; letter-spacing: 0.5px;
+  color: var(--muted); font-weight: 600;
+}
+.toc {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 16px 20px;
+  margin-bottom: 32px;
+}
+.toc h3 {
+  font-size: 12px; text-transform: uppercase;
+  color: var(--muted); margin: 0 0 8px;
+  letter-spacing: 1px;
+}
+.toc ul { margin: 0; list-style: none; columns: 2; column-gap: 24px; }
+.toc li { margin-bottom: 4px; }
+.badge {
+  display: inline-block;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px; padding: 1px 7px;
+  border-radius: 3px; background: var(--accent);
+  color: #000; vertical-align: middle;
+  margin-left: 8px;
+}
+.badge.new { background: #3fb950; color: #000; }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+<h1>&#9992; DJI Mission Planner — User Guide</h1>
+<div class="sub">Version 5.0 &nbsp;|&nbsp; DJI Mini 4 Pro &nbsp;|&nbsp; WPML 1.0.2</div>
+
+<div class="toc">
+  <h3>Contents</h3>
+  <ul>
+    <li><a href="#overview">Overview</a></li>
+    <li><a href="#whatsnew">What's New in v5</a></li>
+    <li><a href="#html">HTML Browser Tool</a></li>
+    <li><a href="#arcgis">ArcGIS Pro Toolbox</a></li>
+    <li><a href="#parameters">Parameter Reference</a></li>
+    <li><a href="#overlap">Overlap & Coverage</a></li>
+    <li><a href="#terrain">Terrain Following</a></li>
+    <li><a href="#load">Loading the Mission</a></li>
+    <li><a href="#tips">Tips & Best Practices</a></li>
+    <li><a href="#legal">Legal &amp; Safety</a></li>
+  </ul>
+</div>
+
+<h2 id="overview">Overview</h2>
+
+<p>This is a pair of tools that generate DJI WPML waypoint missions for the Mini 4 Pro. Both produce the same <code>.kmz</code> output but serve different workflows:</p>
+
+<ul>
+<li><strong>HTML Browser Tool</strong> (<code>DJI_Mission_Planner.html</code>): Standalone, no install — draw a polygon on an interactive map, set parameters, and download a KMZ. Best for quick missions in the field.</li>
+<li><strong>ArcGIS Pro Toolbox</strong> (<code>DJI_Waypoint_Mission.pyt</code>): Integrates with your GIS workflow — uses existing polygon feature classes, projects to BC Albers automatically, supports DEM-based terrain following, and writes preview layers to your active map.</li>
+</ul>
+
+<p>Both tools generate a lawnmower (boustrophedon) waypoint pattern within your survey polygon, with optional double cross-hatch grids, terrain following, and per-waypoint photo capture.</p>
+
+<h2 id="whatsnew">What's New in v5 <span class="badge new">v5.0</span></h2>
+
+<ul>
+<li><strong>Mission Name</strong> — embedded in KMZ metadata; in the HTML version it also becomes the filename prefix</li>
+<li><strong>Front &amp; Side Overlap %</strong> dropdowns — auto-calculate Photo Interval and Strip Spacing based on altitude and Mini 4 Pro camera FOV</li>
+<li><strong>Auto-detect Optimal Strip Direction</strong> — finds the polygon's long axis and aligns strips to it, minimizing turn time</li>
+<li><strong>Edge Buffer</strong> — insets the polygon inward by N units before generating the grid (safety margin from treelines, fences, restricted boundaries)</li>
+<li><strong>Hover Time at Waypoints</strong> — adds a stabilization pause before each photo to reduce motion blur, especially in wind</li>
+<li><strong>AE Lock at First Waypoint</strong> — adds a 3-second hover at waypoint 0 to let the camera settle on a consistent exposure</li>
+<li><strong>Imperial Units toggle</strong> — switches all distance inputs and stats between metric (m, ha) and imperial (ft, acres). Speed remains m/s (DJI WPML native)</li>
+<li><strong>Survey Area display</strong> — shown live in hectares or acres</li>
+<li><strong>HTML imagery basemap toggle</strong> — switch between OpenStreetMap and ESRI World Imagery</li>
+<li><strong>HTML camera footprint overlay</strong> — visualize each waypoint's actual ground coverage as a transparent rectangle</li>
+</ul>
+
+<h2 id="html">HTML Browser Tool</h2>
+
+<p>Open <code>DJI_Mission_Planner.html</code> in any modern browser (Chrome, Firefox, Edge, Safari). No install required. The tool runs entirely in the browser; only the optional terrain-following feature requires internet access.</p>
+
+<h3>Workflow</h3>
+<ol>
+<li>Choose your basemap (Street or Imagery) and units (Metric or Imperial)</li>
+<li>Click <strong>Draw Polygon</strong> and trace your survey area</li>
+<li>Optionally enter a Mission Name and an Edge Buffer</li>
+<li>Set altitude, speed, and overlap percentages (or strip spacing/photo interval directly)</li>
+<li>Toggle Auto-detect Strip Direction if you want the optimal long-axis alignment</li>
+<li>Set Camera, Mission Behavior, and Options as needed</li>
+<li>Click <strong>Generate Mission</strong> — waypoints render on the map with statistics</li>
+<li>Click <strong>Download KMZ</strong> to save the mission file</li>
+</ol>
+
+<div class="callout">
+<strong>Tip:</strong> Toggle <em>Show Camera Footprint Overlay</em> after generating to see actual ground coverage at each waypoint. This is the fastest way to verify your overlap settings produce the coverage you expect.
+</div>
+
+<h3>Imagery Basemap</h3>
+<p>The Imagery option uses ESRI World Imagery tiles — the same satellite layer used in ArcGIS Online. It includes a labels overlay so road and place names remain visible. No API key required. For dense forests or rural areas, imagery is much more useful than OSM streets when locating survey boundaries.</p>
+
+<h3>Imperial Units</h3>
+<p>When toggled, all distance inputs (altitude, strip spacing, photo interval, edge buffer) display and accept feet. Survey area displays in acres. Internally everything is converted to metres for the calculations and the WPML output. Speed stays in m/s in both modes because DJI Pilot 2 expects m/s natively.</p>
+
+<p>Switching units mid-session converts existing values automatically — entering <code>60</code> in metric mode then toggling Imperial will display <code>196.85</code>.</p>
+
+<h2 id="arcgis">ArcGIS Pro Toolbox</h2>
+
+<p>Add <code>DJI_Waypoint_Mission.pyt</code> to your project: Catalog Pane → right-click <em>Toolboxes</em> → Add Toolbox.</p>
+
+<p>The tool processes selected polygon features. If multiple features are selected, each is processed and the waypoints are concatenated. The tool reprojects to BC Albers (EPSG:3005) internally for accurate metric calculations regardless of your input projection.</p>
+
+<h3>Output</h3>
+<ul>
+<li><strong>KMZ file</strong> at the path you specify — ready for DJI Pilot 2</li>
+<li><strong>DJI_Waypoints</strong> point feature class in your scratch GDB with full attribute table (waypoint index, strip number, altitude, terrain elevation, terrain adjustment, hover seconds, gimbal, distance from previous, cumulative distance, lat, lon)</li>
+<li><strong>DJI_FlightPath</strong> polyline feature class with mission-level summary attributes (mission name, total waypoints, distance, time, area in hectares and acres, AE lock, terrain source, generation timestamp)</li>
+</ul>
+
+<p>Both feature classes are added to your active map automatically when <em>Add Preview Layers</em> is checked, with waypoints symbolized by altitude using a graduated color ramp.</p>
+
+<h2 id="parameters">Parameter Reference</h2>
+
+<table>
+<thead><tr><th>Parameter</th><th>Default</th><th>Notes</th></tr></thead>
+<tbody>
+<tr><td>Mission Name</td><td>(empty)</td><td>Embedded in KMZ author field. HTML uses it as filename prefix</td></tr>
+<tr><td>Altitude AGL</td><td>60 m</td><td>Above takeoff (Above Ground Level). Capped at 120 m for basic operations</td></tr>
+<tr><td>Speed</td><td>8 m/s</td><td>Always m/s. WPML max is 15 m/s</td></tr>
+<tr><td>Front Overlap %</td><td>Manual</td><td>Sets along-track overlap. Calculates Photo Interval automatically</td></tr>
+<tr><td>Side Overlap %</td><td>Manual</td><td>Sets cross-track overlap. Calculates Strip Spacing automatically</td></tr>
+<tr><td>Strip Spacing</td><td>30 m</td><td>Distance between parallel passes. Disabled when Side Overlap % is non-Manual</td></tr>
+<tr><td>Photo Interval</td><td>20 m</td><td>Distance between photos along each pass. Disabled when Front Overlap % is non-Manual</td></tr>
+<tr><td>Strip Direction</td><td>0°</td><td>Bearing from North (CW). Disabled when Auto-detect is on</td></tr>
+<tr><td>Auto-detect Strip Direction</td><td>off</td><td>Aligns strips with polygon long axis (minimum bounding rectangle)</td></tr>
+<tr><td>Edge Buffer</td><td>0</td><td>Insets polygon inward by N units. Use for setback from treelines, fences, etc.</td></tr>
+<tr><td>Gimbal Pitch</td><td>-90°</td><td>-90 = nadir (straight down), 0 = forward, +30 = upward</td></tr>
+<tr><td>Hover Time</td><td>0 s</td><td>Pause at each waypoint before photo. Recommended: 0.5–2 s in wind</td></tr>
+<tr><td>AE Lock</td><td>off</td><td>3-second hover at waypoint 0 for camera settling. See note below</td></tr>
+<tr><td>Heading Mode</td><td>followWayline</td><td>Drone yaw points along flight path (most common). Other options: fixed, smoothTransition</td></tr>
+<tr><td>Finish Action</td><td>goHome</td><td>What the drone does after the last waypoint</td></tr>
+<tr><td>RC Lost Action</td><td>goBack</td><td>Behavior on RC signal loss</td></tr>
+<tr><td>Double Grid</td><td>off</td><td>Adds a perpendicular cross-hatch pass. Doubles flight time but improves photogrammetry</td></tr>
+<tr><td>Reverse Mission</td><td>off</td><td>Flips waypoint order — useful for partial re-flights</td></tr>
+<tr><td>Terrain Following</td><td>off</td><td>Adjusts each waypoint altitude based on terrain so AGL is constant. See section below</td></tr>
+<tr><td>Imperial Units</td><td>off</td><td>Treat distance inputs as feet, display areas in acres</td></tr>
+</tbody>
+</table>
+
+<h2 id="overlap">Overlap &amp; Coverage</h2>
+
+<p>The Front and Side Overlap % dropdowns calculate Photo Interval and Strip Spacing from the camera's ground footprint at your altitude:</p>
+
+<pre>Footprint width  (cross-track) = 2 &times; altitude &times; tan(HFOV/2)
+Footprint height (along-track) = 2 &times; altitude &times; tan(VFOV/2)
+
+Strip Spacing  = Footprint width  &times; (1 - SideOverlap%)
+Photo Interval = Footprint height &times; (1 - FrontOverlap%)</pre>
+
+<p>For the Mini 4 Pro: HFOV = 82.1°, VFOV = 65.2°. So at 60 m AGL, the footprint is approximately 104 m wide × 77 m deep on flat ground.</p>
+
+<table>
+<thead><tr><th>Use Case</th><th>Front Overlap</th><th>Side Overlap</th></tr></thead>
+<tbody>
+<tr><td>Quick reconnaissance</td><td>60%</td><td>60%</td></tr>
+<tr><td>Standard mapping</td><td>75%</td><td>70%</td></tr>
+<tr><td>Photogrammetry / 3D models</td><td>80%</td><td>75%</td></tr>
+<tr><td>Vegetation / dense canopy</td><td>85%</td><td>80%</td></tr>
+<tr><td>High-resolution photogrammetry</td><td>90%</td><td>85%</td></tr>
+</tbody>
+</table>
+
+<div class="callout warn">
+<strong>Note on AE Lock:</strong> The Mini 4 Pro consumer drone does not expose a true AE Lock element in WPML. The "AE Lock at First Waypoint" option adds a 3-second hover at waypoint 0 to let the camera settle on consistent exposure before the first photo. For maximum exposure consistency, also enable AE Lock manually in DJI Fly before launching the mission.
+</div>
+
+<h2 id="terrain">Terrain Following</h2>
+
+<p>When enabled, each waypoint's altitude is adjusted based on the terrain elevation at that point relative to the takeoff location:</p>
+
+<pre>executeHeight[i] = desiredAGL + (terrainElev[i] - homeElev)</pre>
+
+<p>So if you specify 60 m AGL and the terrain rises 30 m over the survey area, the drone climbs to 90 m above takeoff at that point — maintaining a constant 60 m above the ground. A 10 m safety floor is enforced.</p>
+
+<h3>Elevation sources</h3>
+<ul>
+<li><strong>Open-Meteo API</strong> (default in both tools): Free, no API key, ~90 m resolution (Copernicus GLO-90 DEM). Requires internet.</li>
+<li><strong>Local DEM raster</strong> (ArcGIS Pro only): Higher resolution if you have it. The tool falls back to Open-Meteo if local sampling fails.</li>
+</ul>
+
+<div class="callout warn">
+<strong>Terrain following is not obstacle avoidance.</strong> The DEM represents the bare earth, not trees or buildings. If you're surveying a forest at 60 m AGL with terrain following enabled, the drone is 60 m above the bare ground — but only ~30 m above 30 m tall trees. Always set your altitude with this in mind.
+</div>
+
+<h2 id="load">Loading the Mission onto the RC</h2>
+
+<h3>RC Pro + DJI Pilot 2</h3>
+<ol>
+<li>Connect the RC Pro to your computer via USB</li>
+<li>Navigate to <code>Android/data/dji.go.v5/files/waypoint/</code></li>
+<li>Open one of the random-name folders and replace its existing KMZ with yours, keeping the original filename</li>
+<li>In DJI Pilot 2, open Waypoint Mission and your replaced mission appears with its original name but your contents</li>
+</ol>
+
+<h3>RC2 + DJI Fly</h3>
+<p>DJI Fly does not natively import WPML missions. The same file-replacement workaround applies, but in <code>Android/data/dji.go.v5/files/waypoint/</code> on the RC2's storage. Some RC2 firmware versions block this — your mileage may vary.</p>
+
+<h3>iOS DJI Fly</h3>
+<p>Use the Files app to copy the KMZ to <code>DJI Fly/wayline_mission/</code>. The mission becomes available in the waypoint mission list.</p>
+
+<h2 id="tips">Tips &amp; Best Practices</h2>
+
+<ul>
+<li><strong>Set Auto-detect Strip Direction</strong> for any non-square polygon. Strips along the long axis means fewer turns and significantly less battery time wasted on turning around.</li>
+<li><strong>Use overlap percentages</strong> instead of manual strip spacing/photo interval for predictable photogrammetry results. The calculations match what Pix4D and Agisoft Metashape expect.</li>
+<li><strong>Keep hover time under 2 seconds</strong> unless wind is significant. Each second of hover at every waypoint adds up — at 500 waypoints, 2 s of hover = 16 minutes added to the mission.</li>
+<li><strong>Use edge buffer for tree-edge surveys</strong> — even a 5 m setback gives a meaningful safety margin. The Mini 4 Pro's GPS hold can drift 1–2 m on its own.</li>
+<li><strong>Verify with the camera footprint preview</strong> in the HTML version. If you see gaps between footprints, your overlap is too low. If you see massive overlap, you're wasting battery.</li>
+<li><strong>Test the mission flow on the RC before flying</strong> — DJI Pilot 2's mission preview shows the drone path and lets you verify altitude transitions are reasonable.</li>
+</ul>
+
+<h2 id="legal">Legal &amp; Safety</h2>
+
+<div class="callout danger">
+<strong>Canada (Transport Canada):</strong> The default 120 m AGL limit applies to Basic Operations. Above 120 m AGL or within 5.6 km of an aerodrome requires Advanced Operations certification or an SFOC. The tool warns when altitude exceeds 120 m but does not check airspace — always verify on the NAV CANADA Drone Site Selection Tool before flying.
+</div>
+
+<p>The drone operator is responsible for verifying:</p>
+<ul>
+<li>Airspace classification and proximity to controlled airspace</li>
+<li>NOTAMs and TFRs in effect</li>
+<li>Visual line-of-sight throughout the mission</li>
+<li>Weather conditions including wind, precipitation, and icing</li>
+<li>Privacy and trespass considerations for the survey area</li>
+</ul>
+
+<p>This tool generates a flight plan; it does not replace pre-flight checks, situational awareness, or the operator's judgment.</p>
+
+</div>
+
+</body>
+</html>

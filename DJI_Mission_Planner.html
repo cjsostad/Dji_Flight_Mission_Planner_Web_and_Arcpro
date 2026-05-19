@@ -1,0 +1,1635 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>DJI Mini 4 Pro — Mission Planner v5</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+:root {
+  --bg:        #0d1117;
+  --panel:     #161b22;
+  --border:    #30363d;
+  --accent:    #f0a500;
+  --accent2:   #2ea8d5;
+  --danger:    #f85149;
+  --success:   #3fb950;
+  --purple:    #a371f7;
+  --text:      #e6edf3;
+  --muted:     #8b949e;
+  --input-bg:  #21262d;
+  --hover-bg:  #1f2937;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Inter', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  height: 100vh;
+  display: flex;
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+#sidebar {
+  width: 340px; min-width: 340px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  z-index: 1000;
+}
+#sidebar-header {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg);
+}
+#sidebar-header h1 {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 17px; font-weight: 700;
+  color: var(--accent);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+#sidebar-header .sub {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10px; color: var(--muted);
+  margin-top: 2px;
+}
+#sidebar-scroll {
+  flex: 1; overflow-y: auto; padding: 10px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
+/* SECTIONS */
+.section {
+  margin-bottom: 10px;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  overflow: hidden;
+}
+.section-title {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: var(--muted);
+  padding: 6px 10px;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.section-body { padding: 9px 10px; }
+
+/* FORM */
+.field { margin-bottom: 7px; }
+.field:last-child { margin-bottom: 0; }
+.field label {
+  display: block;
+  font-size: 10.5px;
+  color: var(--muted);
+  margin-bottom: 2px;
+  font-weight: 500;
+}
+.field input[type="number"], .field input[type="text"], .field select {
+  width: 100%;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  color: var(--text);
+  padding: 4px 7px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 12px;
+  outline: none;
+  transition: border-color 0.15s, opacity 0.15s;
+}
+.field input:focus, .field select:focus { border-color: var(--accent2); }
+.field input:disabled, .field select:disabled { opacity: 0.4; cursor: not-allowed; }
+.field input.calculated { color: var(--accent); font-style: italic; }
+
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+.checkbox-field {
+  display: flex; align-items: center; gap: 7px;
+  padding: 3px 0; cursor: pointer;
+}
+.checkbox-field input[type="checkbox"] {
+  width: 13px; height: 13px;
+  accent-color: var(--accent); cursor: pointer;
+}
+.checkbox-field span {
+  font-size: 11.5px; color: var(--text);
+  user-select: none; line-height: 1.4;
+}
+
+/* TOGGLE GROUP (units, basemap) */
+.toggle-group {
+  display: flex;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px;
+  width: 100%;
+}
+.toggle-group button {
+  flex: 1;
+  background: transparent; border: none;
+  color: var(--muted);
+  padding: 4px 6px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: all 0.15s;
+}
+.toggle-group button.active {
+  background: var(--accent); color: #000;
+}
+.toggle-group button:hover:not(.active) { color: var(--text); }
+
+/* BUTTONS */
+.btn {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px;
+  width: 100%;
+  padding: 7px 11px;
+  border: none; border-radius: 4px;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 12.5px; font-weight: 600;
+  letter-spacing: 0.5px;
+  cursor: pointer;
+  transition: all 0.15s;
+  margin-bottom: 5px;
+}
+.btn:last-child { margin-bottom: 0; }
+.btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.btn-primary { background: var(--accent); color: #000; }
+.btn-primary:hover:not(:disabled) { background: #ffb823; }
+.btn-secondary { background: var(--accent2); color: #fff; }
+.btn-secondary:hover:not(:disabled) { background: #3dbce8; }
+.btn-ghost { background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }
+.btn-ghost:hover:not(:disabled) { background: var(--hover-bg); }
+
+/* STATS */
+.stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 5px;
+}
+.stat-box {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 6px 8px;
+}
+.stat-label {
+  font-size: 9.5px; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+.stat-value {
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 13.5px; color: var(--accent);
+  font-weight: 600; margin-top: 1px;
+}
+.stat-box.full { grid-column: 1 / -1; }
+
+/* STATUS */
+#status-bar {
+  padding: 7px 11px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10.5px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  min-height: 32px;
+  display: flex; align-items: center; gap: 6px;
+}
+#status-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--muted);
+  flex-shrink: 0;
+}
+#status-dot.active  { background: var(--success); animation: pulse 1.5s infinite; }
+#status-dot.warning { background: var(--accent); }
+#status-dot.error   { background: var(--danger); }
+@keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.3; } }
+#status-text { color: var(--muted); flex: 1; }
+
+/* MAP */
+#map { flex: 1; z-index: 1; background: #1a1a1a; }
+.leaflet-control-zoom a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
+.leaflet-control-zoom a:hover { background: var(--hover-bg) !important; }
+.leaflet-draw-toolbar a { background: var(--panel) !important; color: var(--text) !important; border-color: var(--border) !important; }
+
+/* Hide the draw toolbar on map - we use sidebar buttons instead */
+.leaflet-draw-toolbar { display: none !important; }
+
+
+/* INFO BOXES */
+#home-instruction, #terrain-info {
+  display: none;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 10.5px;
+  border-radius: 3px;
+  padding: 6px 8px;
+  margin-top: 5px;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+#home-instruction {
+  background: rgba(240,165,0,0.12);
+  border: 1px solid rgba(240,165,0,0.4);
+  color: var(--accent);
+}
+#terrain-info {
+  background: rgba(63,185,80,0.08);
+  border: 1px solid rgba(63,185,80,0.3);
+  color: var(--success);
+}
+.warn-text {
+  font-size: 10.5px;
+  color: var(--accent);
+  background: rgba(240,165,0,0.1);
+  border: 1px solid rgba(240,165,0,0.3);
+  border-radius: 3px;
+  padding: 4px 7px;
+  margin-top: 5px;
+  display: none;
+}
+
+/* SPINNER */
+.spinner {
+  display: inline-block;
+  width: 11px; height: 11px;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent2);
+  border-radius: 50%;
+  animation: spin 0.6s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<div id="sidebar">
+  <div id="sidebar-header">
+    <h1>&#9992; DJI Mission Planner</h1>
+    <div class="sub">Mini 4 Pro &nbsp;|&nbsp; WPML 1.0.2 &nbsp;|&nbsp; v5.0</div>
+  </div>
+
+  <div id="sidebar-scroll">
+
+    <!-- BASEMAP & UNITS -->
+    <div class="section">
+      <div class="section-title">&#127760; Map & Units</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Basemap</label>
+          <div class="toggle-group" id="basemap-toggle">
+            <button class="active" data-bm="osm">Street (OSM)</button>
+            <button data-bm="esri">Imagery (ESRI)</button>
+          </div>
+        </div>
+        <div class="field" style="margin-top:7px">
+          <label>Units</label>
+          <div class="toggle-group" id="units-toggle">
+            <button class="active" data-units="metric">Metric (m)</button>
+            <button data-units="imperial">Imperial (ft)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SURVEY AREA -->
+    <div class="section">
+      <div class="section-title">&#9998; Survey Area</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Mission Name (optional)</label>
+          <input type="text" id="mission_name" placeholder="e.g. Test Woods Survey" maxlength="60">
+        </div>
+        <button class="btn btn-secondary" id="btn-draw">&#9723; Draw Polygon</button>
+        <button class="btn btn-ghost" id="btn-clear">&#10005; Clear Map</button>
+        <div class="field" style="margin-top:7px">
+          <label><span id="lbl-edge-buffer">Edge Buffer (m) — inset polygon inward</span></label>
+          <input type="number" id="edge_buffer" value="0" min="0" step="1">
+        </div>
+      </div>
+    </div>
+
+    <!-- FLIGHT -->
+    <div class="section">
+      <div class="section-title">&#9881; Flight Parameters</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field">
+            <label><span id="lbl-altitude">Altitude AGL (m)</span></label>
+            <input type="number" id="altitude" value="60" min="2" step="1">
+          </div>
+          <div class="field">
+            <label>Speed (m/s, max 15)</label>
+            <input type="number" id="speed" value="8" min="1" max="15" step="0.5">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- COVERAGE -->
+    <div class="section">
+      <div class="section-title">&#128247; Coverage</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field">
+            <label>Front Overlap %</label>
+            <select id="front_overlap">
+              <option value="Manual" selected>Manual</option>
+              <option value="60">60%</option>
+              <option value="65">65%</option>
+              <option value="70">70%</option>
+              <option value="75">75%</option>
+              <option value="80">80%</option>
+              <option value="85">85%</option>
+              <option value="90">90%</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>Side Overlap %</label>
+            <select id="side_overlap">
+              <option value="Manual" selected>Manual</option>
+              <option value="60">60%</option>
+              <option value="65">65%</option>
+              <option value="70">70%</option>
+              <option value="75">75%</option>
+              <option value="80">80%</option>
+              <option value="85">85%</option>
+              <option value="90">90%</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2" style="margin-top:5px">
+          <div class="field">
+            <label><span id="lbl-strip-spacing">Strip Spacing (m)</span></label>
+            <input type="number" id="strip_spacing" value="30" min="1" step="1">
+          </div>
+          <div class="field">
+            <label><span id="lbl-photo-interval">Photo Interval (m)</span></label>
+            <input type="number" id="photo_interval" value="20" min="1" step="1">
+          </div>
+        </div>
+        <div class="field" style="margin-top:5px">
+          <label>Strip Direction (° from N)</label>
+          <input type="number" id="flight_dir" value="0" min="0" max="359" step="1">
+        </div>
+        <label class="checkbox-field" style="margin-top:5px">
+          <input type="checkbox" id="auto_strip_dir">
+          <span>Auto-detect optimal strip direction (long axis)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- CAMERA -->
+    <div class="section">
+      <div class="section-title">&#127909; Camera</div>
+      <div class="section-body">
+        <div class="row2">
+          <div class="field">
+            <label>Gimbal Pitch (°)  —  -90 = nadir (straight down)</label>
+            <input type="number" id="gimbal_pitch" value="-90" min="-90" max="30" step="1">
+          </div>
+          <div class="field">
+            <label>Hover (s)</label>
+            <input type="number" id="hover_time" value="0" min="0" max="30" step="0.5">
+          </div>
+        </div>
+        <label class="checkbox-field" style="margin-top:5px">
+          <input type="checkbox" id="ae_lock">
+          <span>AE Lock at first waypoint (3 s settle)</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- BEHAVIOR -->
+    <div class="section">
+      <div class="section-title">&#128640; Mission Behavior</div>
+      <div class="section-body">
+        <div class="field">
+          <label>Heading Mode</label>
+          <select id="heading_mode">
+            <option value="followWayline" selected>Follow Wayline</option>
+            <option value="fixed">Fixed</option>
+            <option value="smoothTransition">Smooth Transition</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Finish Action</label>
+          <select id="finish_action">
+            <option value="goHome" selected>Go Home</option>
+            <option value="autoLand">Auto Land</option>
+            <option value="gotoFirstWaypoint">Return to First Waypoint</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>RC Signal Lost</label>
+          <select id="rc_lost">
+            <option value="goBack" selected>Go Back</option>
+            <option value="hover">Hover</option>
+            <option value="land">Land</option>
+            <option value="goContinue">Continue Mission</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- OPTIONS -->
+    <div class="section">
+      <div class="section-title">&#9965; Options</div>
+      <div class="section-body">
+        <label class="checkbox-field">
+          <input type="checkbox" id="double_grid">
+          <span>Double Grid (cross-hatch at +90°)</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="reverse_mission">
+          <span>Reverse Mission Order</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="terrain_follow">
+          <span>Terrain Following (Open-Meteo)</span>
+        </label>
+        <label class="checkbox-field">
+          <input type="checkbox" id="show_footprint">
+          <span>Show Camera Footprint Overlay</span>
+        </label>
+        <div id="home-instruction">
+          &#9650; Click the map to set your <strong>takeoff point</strong>.
+          Terrain elevation there will be the altitude reference.
+          If not set, the polygon centroid is used.
+        </div>
+        <div id="terrain-info"></div>
+        <div id="warn-altitude" class="warn-text">&#9888; Altitude > 120 m AGL — Transport Canada Advanced Operations required.</div>
+        <div id="warn-speed" class="warn-text">&#9888; Speed exceeds 15 m/s maximum.</div>
+        <div id="warn-waypoints" class="warn-text">&#9888; Waypoint count is high. Consider splitting.</div>
+      </div>
+    </div>
+
+    <!-- STATS -->
+    <div class="section">
+      <div class="section-title">&#9203; Mission Statistics</div>
+      <div class="section-body">
+        <div class="stats-grid">
+          <div class="stat-box"><div class="stat-label">Strips</div><div class="stat-value" id="stat-strips">—</div></div>
+          <div class="stat-box"><div class="stat-label">Waypoints</div><div class="stat-value" id="stat-waypoints">—</div></div>
+          <div class="stat-box"><div class="stat-label">Distance</div><div class="stat-value" id="stat-distance">—</div></div>
+          <div class="stat-box"><div class="stat-label">Flight Time</div><div class="stat-value" id="stat-time">—</div></div>
+          <div class="stat-box"><div class="stat-label">Photos</div><div class="stat-value" id="stat-photos">—</div></div>
+          <div class="stat-box"><div class="stat-label">GSD</div><div class="stat-value" id="stat-gsd">—</div></div>
+          <div class="stat-box full"><div class="stat-label">Survey Area</div><div class="stat-value" id="stat-area">—</div></div>
+          <div class="stat-box full" id="stat-terrain-box" style="display:none">
+            <div class="stat-label">Terrain Relief</div>
+            <div class="stat-value" id="stat-terrain">—</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ACTIONS -->
+    <div class="section">
+      <div class="section-title">&#9654; Generate &amp; Export</div>
+      <div class="section-body">
+        <button class="btn btn-primary" id="btn-generate">&#9654; Generate Mission</button>
+        <button class="btn btn-secondary" id="btn-download" disabled>&#11123; Download KMZ</button>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="status-bar">
+    <div id="status-dot"></div>
+    <span id="status-text">Draw a polygon to begin.</span>
+  </div>
+</div>
+
+<div id="map"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+<script>
+// ============================================================
+// Constants & State
+// ============================================================
+const FOCAL_MM = 9.74, SENSOR_W = 9.60, IMG_W_PX = 8064;
+const HFOV_DEG = 82.1, VFOV_DEG = 65.2;
+const FT_PER_M = 3.28084, M_PER_FT = 1 / FT_PER_M;
+const HA_PER_M2 = 1/10000, ACRE_PER_M2 = 0.000247105;
+
+let map, drawControl, drawnLayer = null, polygonLatLngs = null;
+let bufferedLatLngs = null;
+let gridLayer = null, footprintLayer = null;
+let homeMarker = null, homeLatLon = null;
+let isSettingHome = false;
+let isImperial = false;
+
+let osmLayer = null, esriLayer = null, esriLabels = null;
+
+let generatedWaypoints = null;
+let generatedAltitudes = null;
+let terrainElevations = null;
+
+// ============================================================
+// Map init
+// ============================================================
+function initMap() {
+  map = L.map('map', { center: [49.7, -125.0], zoom: 10, preferCanvas: true });
+
+  osmLayer = L.tileLayer(
+    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+    {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20
+    }
+  ).addTo(map);
+
+  esriLayer = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community',
+      maxZoom: 19
+    }
+  );
+  
+  esriLayer.on('tileerror', function(error, tile) {
+    console.warn('ESRI tile failed to load:', error);
+  });
+
+  esriLabels = L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+    { 
+      maxZoom: 19, 
+      opacity: 0.9
+    }
+  );
+  
+  esriLabels.on('tileerror', function(error, tile) {
+    console.warn('ESRI labels tile failed to load:', error);
+  });
+
+  drawControl = new L.Control.Draw({
+    draw: {
+      polygon: { shapeOptions: { color: '#f0a500', fillOpacity: 0.08, weight: 2 }, showArea: true },
+      polyline: false, rectangle: false, circle: false, circlemarker: false, marker: false
+    }
+  });
+  map.addControl(drawControl);
+
+  map.on(L.Draw.Event.CREATED, function(e) {
+    if (drawnLayer) map.removeLayer(drawnLayer);
+    drawnLayer = e.layer;
+    map.addLayer(drawnLayer);
+    polygonLatLngs = drawnLayer.getLatLngs()[0].map(ll => [ll.lat, ll.lng]);
+    setStatus('Polygon drawn. Set parameters and Generate.', 'active');
+    clearGrid();
+    updateAreaPreview();
+  });
+
+  map.on('click', function(e) {
+    if (!isSettingHome) return;
+    homeLatLon = [e.latlng.lat, e.latlng.lng];
+    if (homeMarker) map.removeLayer(homeMarker);
+    homeMarker = L.marker(e.latlng, {
+      icon: L.divIcon({
+        html: '<div style="background:#f0a500;width:14px;height:14px;border-radius:50%;border:3px solid #fff;box-shadow:0 0 6px rgba(0,0,0,0.6)"></div>',
+        iconSize: [14,14], iconAnchor: [7,7]
+      })
+    }).bindTooltip('Takeoff Point').addTo(map);
+    isSettingHome = false;
+    map.getContainer().style.cursor = '';
+    setStatus('Takeoff point set at ' + homeLatLon[0].toFixed(5) + ', ' + homeLatLon[1].toFixed(5), 'active');
+    document.getElementById('home-instruction').style.display = 'none';
+  });
+}
+
+// ============================================================
+// Basemap toggle
+// ============================================================
+function setBasemap(which) {
+  console.log('Switching basemap to:', which);
+  if (which === 'esri') {
+    map.removeLayer(osmLayer);
+    esriLayer.addTo(map);
+    esriLabels.addTo(map);
+    console.log('ESRI imagery layer added');
+  } else {
+    if (map.hasLayer(esriLayer)) map.removeLayer(esriLayer);
+    if (map.hasLayer(esriLabels)) map.removeLayer(esriLabels);
+    osmLayer.addTo(map);
+    console.log('OSM layer added');
+  }
+}
+
+// ============================================================
+// Units toggle
+// ============================================================
+function applyUnits() {
+  // Update labels and convert displayed values
+  const u = isImperial ? 'ft' : 'm';
+  document.getElementById('lbl-altitude').textContent      = `Altitude AGL (${u})`;
+  document.getElementById('lbl-strip-spacing').textContent = `Strip Spacing (${u})`;
+  document.getElementById('lbl-photo-interval').textContent= `Photo Interval (${u})`;
+  document.getElementById('lbl-edge-buffer').textContent   = `Edge Buffer (${u}) — inset polygon inward`;
+}
+
+// Convert a value FROM the current display unit TO metres (for internal use)
+function toMetres(val) {
+  return isImperial ? val * M_PER_FT : val;
+}
+// Convert a metre value TO the current display unit (for display)
+function fromMetres(val) {
+  return isImperial ? val * FT_PER_M : val;
+}
+
+// ============================================================
+// UI helpers
+// ============================================================
+function setStatus(msg, type='') {
+  document.getElementById('status-text').textContent = msg;
+  const dot = document.getElementById('status-dot');
+  dot.className = '';
+  if (type) dot.className = type;
+}
+function setStatusSpinner(msg) {
+  document.getElementById('status-text').innerHTML = '<span class="spinner"></span> ' + msg;
+  document.getElementById('status-dot').className = '';
+}
+
+function clearGrid() {
+  if (gridLayer) { map.removeLayer(gridLayer); gridLayer = null; }
+  if (footprintLayer) { map.removeLayer(footprintLayer); footprintLayer = null; }
+  generatedWaypoints = null; generatedAltitudes = null; terrainElevations = null;
+  document.getElementById('btn-download').disabled = true;
+  document.getElementById('terrain-info').style.display = 'none';
+  document.getElementById('stat-terrain-box').style.display = 'none';
+  ['stat-strips','stat-waypoints','stat-distance','stat-time','stat-photos','stat-gsd']
+    .forEach(id => document.getElementById(id).textContent = '—');
+}
+
+function updateAreaPreview() {
+  if (!polygonLatLngs || polygonLatLngs.length < 3) {
+    document.getElementById('stat-area').textContent = '—';
+    return;
+  }
+  const areaM2 = polygonAreaM2(polygonLatLngs);
+  if (isImperial) {
+    document.getElementById('stat-area').textContent = (areaM2 * ACRE_PER_M2).toFixed(2) + ' acres';
+  } else {
+    document.getElementById('stat-area').textContent = (areaM2 * HA_PER_M2).toFixed(3) + ' ha';
+  }
+}
+
+function validateInputs() {
+  const altDisplay = parseFloat(document.getElementById('altitude').value);
+  const altM = toMetres(altDisplay);
+  const speed = parseFloat(document.getElementById('speed').value);
+  document.getElementById('warn-altitude').style.display = altM > 120 ? '' : 'none';
+  document.getElementById('warn-speed').style.display    = speed > 15 ? '' : 'none';
+}
+
+function syncOverlapDropdowns() {
+  // When a non-Manual overlap is chosen, gray out the corresponding spacing field
+  // and show the calculated value.
+  const altM = toMetres(parseFloat(document.getElementById('altitude').value));
+  const fp_w = 2 * altM * Math.tan(HFOV_DEG/2 * Math.PI/180);
+  const fp_h = 2 * altM * Math.tan(VFOV_DEG/2 * Math.PI/180);
+
+  const front = document.getElementById('front_overlap').value;
+  const side  = document.getElementById('side_overlap').value;
+  const piIn  = document.getElementById('photo_interval');
+  const ssIn  = document.getElementById('strip_spacing');
+
+  if (front !== 'Manual') {
+    const pct = parseFloat(front) / 100;
+    const piM = fp_h * (1 - pct);
+    piIn.value = fromMetres(piM).toFixed(2);
+    piIn.disabled = true;
+    piIn.classList.add('calculated');
+  } else {
+    piIn.disabled = false;
+    piIn.classList.remove('calculated');
+  }
+
+  if (side !== 'Manual') {
+    const pct = parseFloat(side) / 100;
+    const ssM = fp_w * (1 - pct);
+    ssIn.value = fromMetres(ssM).toFixed(2);
+    ssIn.disabled = true;
+    ssIn.classList.add('calculated');
+  } else {
+    ssIn.disabled = false;
+    ssIn.classList.remove('calculated');
+  }
+}
+
+// ============================================================
+// Geometry helpers
+// ============================================================
+function latLonToLocal(lat, lon, clat, clon) {
+  const R = 6371000;
+  return [
+    (lon - clon) * Math.PI/180 * R * Math.cos(clat * Math.PI/180),
+    (lat - clat) * Math.PI/180 * R
+  ];
+}
+function localToLatLon(x, y, clat, clon) {
+  const R = 6371000;
+  return [
+    clat + (y / R) * 180/Math.PI,
+    clon + (x / (R * Math.cos(clat * Math.PI/180))) * 180/Math.PI
+  ];
+}
+function rotate(x, y, ang) {
+  return [x*Math.cos(ang) - y*Math.sin(ang), x*Math.sin(ang) + y*Math.cos(ang)];
+}
+function centroid(latlngs) {
+  return [
+    latlngs.reduce((s,p)=>s+p[0],0)/latlngs.length,
+    latlngs.reduce((s,p)=>s+p[1],0)/latlngs.length
+  ];
+}
+function haversine(p1, p2) {
+  const R = 6371000, toR = Math.PI/180;
+  const la1 = p1[0]*toR, la2 = p2[0]*toR;
+  const dLa = la2 - la1, dLo = (p2[1]-p1[1])*toR;
+  const a = Math.sin(dLa/2)**2 + Math.cos(la1)*Math.cos(la2)*Math.sin(dLo/2)**2;
+  return R * 2 * Math.asin(Math.sqrt(Math.max(0,a)));
+}
+function totalDistance(wps) {
+  let d = 0;
+  for (let i = 1; i < wps.length; i++) d += haversine(wps[i-1], wps[i]);
+  return d;
+}
+
+// Polygon area (Shoelace) in square metres using local projection
+function polygonAreaM2(latlngs) {
+  if (latlngs.length < 3) return 0;
+  const [clat, clon] = centroid(latlngs);
+  const local = latlngs.map(([la,lo]) => latLonToLocal(la, lo, clat, clon));
+  let a = 0;
+  for (let i = 0; i < local.length; i++) {
+    const j = (i + 1) % local.length;
+    a += local[i][0] * local[j][1];
+    a -= local[j][0] * local[i][1];
+  }
+  return Math.abs(a / 2);
+}
+
+// ============================================================
+// Auto-detect strip direction (rotating calipers via brute-force)
+// ============================================================
+function autoStripDirection(latlngs) {
+  const [clat, clon] = centroid(latlngs);
+  const local = latlngs.map(([la,lo]) => latLonToLocal(la, lo, clat, clon));
+
+  let bestArea = Infinity, bestAngle = 0;
+  // Try angles 0-179 in 1° steps; find angle that minimizes axis-aligned bbox area
+  for (let deg = 0; deg < 180; deg++) {
+    const rad = -deg * Math.PI/180;  // rotate CW by deg
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    for (const [x, y] of local) {
+      const rx = x*Math.cos(rad) - y*Math.sin(rad);
+      const ry = x*Math.sin(rad) + y*Math.cos(rad);
+      if (rx < minX) minX = rx;
+      if (rx > maxX) maxX = rx;
+      if (ry < minY) minY = ry;
+      if (ry > maxY) maxY = ry;
+    }
+    const w = maxX - minX, h = maxY - minY;
+    const area = w * h;
+    if (area < bestArea) {
+      bestArea = area;
+      bestAngle = deg;
+      // Decide whether long axis is X or Y in rotated frame
+      // long axis bearing in original = best angle if X is longer, else best+90
+      bestAngle = (w >= h) ? deg : (deg + 90) % 180;
+    }
+  }
+  // bestAngle is the orientation of the long axis (0-179° from East CCW in local frame)
+  // Convert to compass bearing (0-359° clockwise from North):
+  // local frame: X = East, Y = North. Angle measured CCW from East.
+  // bearing = 90 - localAngle  (mod 360)
+  let bearing = (90 - bestAngle) % 360;
+  if (bearing < 0) bearing += 360;
+  return bearing;
+}
+
+// ============================================================
+// Edge buffer (inward polygon offset)
+// Simple algorithm: each edge gets pushed inward by buffer distance along its
+// inward normal; new vertices are intersections of adjacent offset edges.
+// Works for convex and mildly concave polygons.
+// ============================================================
+function bufferPolygonInward(latlngs, bufferM) {
+  if (bufferM <= 0) return latlngs;
+  if (latlngs.length < 3) return latlngs;
+
+  const [clat, clon] = centroid(latlngs);
+  let pts = latlngs.map(([la,lo]) => latLonToLocal(la, lo, clat, clon));
+
+  // Ensure counter-clockwise orientation (positive signed area)
+  let signedArea = 0;
+  for (let i = 0; i < pts.length; i++) {
+    const j = (i + 1) % pts.length;
+    signedArea += pts[i][0] * pts[j][1] - pts[j][0] * pts[i][1];
+  }
+  signedArea /= 2;
+  if (signedArea < 0) {
+    pts = pts.slice().reverse();
+  }
+
+  const n = pts.length;
+
+  // Compute offset edges (inward = left of edge direction in CCW polygon)
+  const offsetLines = [];  // each: { p, dir }
+  for (let i = 0; i < n; i++) {
+    const a = pts[i], b = pts[(i+1) % n];
+    const dx = b[0] - a[0], dy = b[1] - a[1];
+    const len = Math.sqrt(dx*dx + dy*dy);
+    if (len < 1e-9) continue;
+    const ux = dx/len, uy = dy/len;
+    // Inward normal for CCW = rotate edge direction 90° CCW = (-uy, ux)
+    const nx = -uy, ny = ux;
+    const offsetA = [a[0] + nx * bufferM, a[1] + ny * bufferM];
+    offsetLines.push({ p: offsetA, dir: [ux, uy] });
+  }
+
+  // Intersect consecutive offset lines to get new vertices
+  const newPts = [];
+  const m = offsetLines.length;
+  for (let i = 0; i < m; i++) {
+    const L1 = offsetLines[i];
+    const L2 = offsetLines[(i+1) % m];
+    // Solve L1.p + t * L1.dir = L2.p + s * L2.dir
+    // Two equations, two unknowns; solve for t.
+    const det = L1.dir[0] * (-L2.dir[1]) - L1.dir[1] * (-L2.dir[0]);
+    if (Math.abs(det) < 1e-9) continue;  // parallel
+    const dx = L2.p[0] - L1.p[0], dy = L2.p[1] - L1.p[1];
+    const t = (dx * (-L2.dir[1]) - dy * (-L2.dir[0])) / det;
+    newPts.push([
+      L1.p[0] + t * L1.dir[0],
+      L1.p[1] + t * L1.dir[1]
+    ]);
+  }
+
+  if (newPts.length < 3) return null;  // buffer eliminated polygon
+
+  // Convert back to lat/lng
+  return newPts.map(([x, y]) => localToLatLon(x, y, clat, clon));
+}
+
+// ============================================================
+// Lawnmower grid generator
+// ============================================================
+function generateLawnmower(latlngs, stripSpacing, photoInterval, flightDirDeg) {
+  const [clat, clon] = centroid(latlngs);
+  const mathAngle = (90 - flightDirDeg) * Math.PI/180;
+
+  const local   = latlngs.map(([la,lo]) => latLonToLocal(la, lo, clat, clon));
+  const rotated = local.map(([x,y]) => rotate(x, y, mathAngle));
+
+  const minY = Math.min(...rotated.map(p => p[1]));
+  const maxY = Math.max(...rotated.map(p => p[1]));
+  const pts   = [...rotated, rotated[0]];
+  const edges = pts.slice(0,-1).map((p,i) => [p, pts[i+1]]);
+
+  const waypoints = [];
+  const stripNums = [];
+  let stripCounter = 0;
+  let stripIdx = 0;
+
+  for (let sy = minY + stripSpacing/2; sy <= maxY + 1e-6; sy += stripSpacing) {
+    const xs = [];
+    for (const [[x1,y1],[x2,y2]] of edges) {
+      if (Math.abs(y2-y1) < 1e-9) continue;
+      const t = (sy - y1) / (y2 - y1);
+      if (t >= 0 && t <= 1) xs.push(x1 + t*(x2-x1));
+    }
+    if (xs.length < 2) { stripIdx++; continue; }
+    xs.sort((a,b) => a-b);
+
+    for (let pi = 0; pi < xs.length-1; pi += 2) {
+      let xa = xs[pi], xb = xs[pi+1];
+      const seg = Math.abs(xb - xa);
+      if (seg < 0.1) continue;
+      if (stripIdx % 2 === 1) [xa, xb] = [xb, xa];
+      const dir = xb >= xa ? 1 : -1;
+      const len = Math.abs(xb - xa);
+      const n   = Math.max(1, Math.ceil(len / photoInterval));
+      const ivl = len / n;
+
+      for (let k = 0; k <= n; k++) {
+        const gx = xa + dir * k * ivl;
+        const [wx, wy] = rotate(gx, sy, -mathAngle);
+        const [la, lo] = localToLatLon(wx, wy, clat, clon);
+        waypoints.push([la, lo]);
+        stripNums.push(stripCounter);
+      }
+      stripCounter++;
+    }
+    stripIdx++;
+  }
+
+  return { waypoints, stripNums, strips: stripCounter };
+}
+
+// ============================================================
+// Camera footprint rectangle for a waypoint
+// Returns array of 4 [lat, lon] corners
+// ============================================================
+function footprintRectangle(wp, nextWp, altitudeM) {
+  const fp_w = 2 * altitudeM * Math.tan(HFOV_DEG/2 * Math.PI/180);
+  const fp_h = 2 * altitudeM * Math.tan(VFOV_DEG/2 * Math.PI/180);
+
+  // Direction: compute bearing from wp to nextWp (or use 0 if same)
+  let bearingRad = 0;
+  if (nextWp && (nextWp[0] !== wp[0] || nextWp[1] !== wp[1])) {
+    const lat1 = wp[0]*Math.PI/180, lat2 = nextWp[0]*Math.PI/180;
+    const dLon = (nextWp[1] - wp[1])*Math.PI/180;
+    const y = Math.sin(dLon)*Math.cos(lat2);
+    const x = Math.cos(lat1)*Math.sin(lat2) - Math.sin(lat1)*Math.cos(lat2)*Math.cos(dLon);
+    bearingRad = Math.atan2(y, x);  // CW from N
+  }
+
+  // Footprint rectangle in local frame (cross-track = X, along-track = Y)
+  const corners = [
+    [-fp_w/2, -fp_h/2],
+    [ fp_w/2, -fp_h/2],
+    [ fp_w/2,  fp_h/2],
+    [-fp_w/2,  fp_h/2],
+  ];
+
+  // Rotate by drone heading and translate to waypoint position
+  const [clat, clon] = wp;
+  return corners.map(([cx, cy]) => {
+    // Rotate so +Y aligns with bearing direction (rotation = -bearingRad in math frame)
+    const rx = cx * Math.cos(-bearingRad) - cy * Math.sin(-bearingRad);
+    const ry = cx * Math.sin(-bearingRad) + cy * Math.cos(-bearingRad);
+    return localToLatLon(rx, ry, clat, clon);
+  });
+}
+
+// ============================================================
+// Terrain following
+// ============================================================
+async function fetchElevationsBatch(latlngs) {
+  const BATCH = 100;
+  const out = [];
+  for (let i = 0; i < latlngs.length; i += BATCH) {
+    const chunk = latlngs.slice(i, i + BATCH);
+    const lats = chunk.map(p => p[0].toFixed(6)).join(',');
+    const lons = chunk.map(p => p[1].toFixed(6)).join(',');
+    const url  = `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lons}`;
+    const r = await fetch(url);
+    if (!r.ok) throw new Error('Elevation API ' + r.status);
+    const data = await r.json();
+    out.push(...data.elevation);
+  }
+  return out;
+}
+
+async function applyTerrainFollowing(waypoints, homePoint, desiredAGL) {
+  setStatusSpinner(`Fetching terrain (${waypoints.length} points)...`);
+  const allPts = [homePoint, ...waypoints];
+  const elevs  = await fetchElevationsBatch(allPts);
+  const homeElev = elevs[0];
+  const wpElevs  = elevs.slice(1);
+  const adjusted = wpElevs.map(e => {
+    if (e === null || e === undefined || homeElev === null) return desiredAGL;
+    return Math.max(10, desiredAGL + (e - homeElev));
+  });
+  const valid = wpElevs.filter(e => e !== null && e !== undefined);
+  return {
+    adjustedAlts: adjusted,
+    homeElev,
+    wpElevs,
+    terrainMin: Math.min(...valid),
+    terrainMax: Math.max(...valid)
+  };
+}
+
+// ============================================================
+// Generate mission
+// ============================================================
+async function generateMission() {
+  if (!polygonLatLngs || polygonLatLngs.length < 3) {
+    setStatus('Draw a polygon first.', 'error'); return;
+  }
+
+  // Read inputs (display values) and convert to metric
+  const altDisplay = parseFloat(document.getElementById('altitude').value);
+  const altM       = toMetres(altDisplay);
+  const speed      = parseFloat(document.getElementById('speed').value);
+  const ssDisplay  = parseFloat(document.getElementById('strip_spacing').value);
+  const piDisplay  = parseFloat(document.getElementById('photo_interval').value);
+  const ssM        = toMetres(ssDisplay);
+  const piM        = toMetres(piDisplay);
+  let flightDir    = parseFloat(document.getElementById('flight_dir').value);
+  const ebDisplay  = parseFloat(document.getElementById('edge_buffer').value || 0);
+  const ebM        = toMetres(ebDisplay);
+  const gimbal     = parseFloat(document.getElementById('gimbal_pitch').value);
+  const hoverTime  = parseFloat(document.getElementById('hover_time').value || 0);
+  const aeLock     = document.getElementById('ae_lock').checked;
+  const autoStrip  = document.getElementById('auto_strip_dir').checked;
+  const doubleGrid = document.getElementById('double_grid').checked;
+  const reverseMis = document.getElementById('reverse_mission').checked;
+  const doTerrain  = document.getElementById('terrain_follow').checked;
+  const showFp     = document.getElementById('show_footprint').checked;
+  const missionName= document.getElementById('mission_name').value.trim();
+
+  if (speed > 15) { setStatus('Speed exceeds 15 m/s.', 'error'); return; }
+  if (ssM < 1 || piM < 1) { setStatus('Strip spacing and photo interval must be >= 1 m.', 'error'); return; }
+
+  clearGrid();
+  setStatusSpinner('Generating grid...');
+  document.getElementById('btn-generate').disabled = true;
+  document.getElementById('btn-download').disabled = true;
+
+  try {
+    // Apply edge buffer to polygon
+    let workingPolygon = polygonLatLngs;
+    if (ebM > 0.01) {
+      workingPolygon = bufferPolygonInward(polygonLatLngs, ebM);
+      if (!workingPolygon || workingPolygon.length < 3) {
+        setStatus(`Edge buffer ${ebDisplay} ${isImperial?'ft':'m'} eliminated the polygon.`, 'error');
+        document.getElementById('btn-generate').disabled = false;
+        return;
+      }
+      bufferedLatLngs = workingPolygon;
+    } else {
+      bufferedLatLngs = null;
+    }
+
+    // Auto-detect strip direction
+    if (autoStrip) {
+      flightDir = autoStripDirection(workingPolygon);
+      document.getElementById('flight_dir').value = flightDir.toFixed(0);
+    }
+
+    // Primary grid
+    const r1 = generateLawnmower(workingPolygon, ssM, piM, flightDir);
+    let allWaypoints = [...r1.waypoints];
+    let allStripNums = [...r1.stripNums];
+    let totalStrips  = r1.strips;
+
+    // Double grid
+    if (doubleGrid) {
+      const r2 = generateLawnmower(workingPolygon, ssM, piM, (flightDir + 90) % 360);
+      const offset = totalStrips;
+      allWaypoints = allWaypoints.concat(r2.waypoints);
+      allStripNums = allStripNums.concat(r2.stripNums.map(s => s + offset));
+      totalStrips += r2.strips;
+    }
+
+    if (allWaypoints.length === 0) {
+      setStatus('No waypoints generated. Polygon may be too small.', 'error');
+      document.getElementById('btn-generate').disabled = false; return;
+    }
+    if (allWaypoints.length > 65535) {
+      setStatus(`Too many waypoints (${allWaypoints.length}). Increase spacing.`, 'error');
+      document.getElementById('btn-generate').disabled = false; return;
+    }
+
+    if (reverseMis) {
+      allWaypoints = allWaypoints.reverse();
+      allStripNums = allStripNums.reverse();
+    }
+
+    let altitudes = allWaypoints.map(() => altM);
+    let terrainResult = null;
+
+    if (doTerrain) {
+      const hp = homeLatLon || centroid(workingPolygon);
+      try {
+        terrainResult = await applyTerrainFollowing(allWaypoints, hp, altM);
+        altitudes = terrainResult.adjustedAlts;
+        const infoEl = document.getElementById('terrain-info');
+        infoEl.style.display = '';
+        infoEl.textContent =
+          `Home: ${terrainResult.homeElev.toFixed(1)} m ASL\n` +
+          `Terrain: ${terrainResult.terrainMin.toFixed(1)} – ${terrainResult.terrainMax.toFixed(1)} m ASL\n` +
+          `Relief: ${(terrainResult.terrainMax - terrainResult.terrainMin).toFixed(1)} m\n` +
+          `Altitude range: ${Math.min(...altitudes).toFixed(1)} – ${Math.max(...altitudes).toFixed(1)} m above takeoff`;
+      } catch (err) {
+        setStatus('Terrain API error: ' + err.message + '. Using flat altitude.', 'warning');
+        document.getElementById('terrain-info').style.display = 'none';
+      }
+    }
+
+    generatedWaypoints = allWaypoints;
+    generatedAltitudes = altitudes;
+
+    // Draw on map
+    drawGrid(allWaypoints, altitudes, workingPolygon, showFp);
+
+    // Stats
+    const dist     = totalDistance(allWaypoints);
+    const flightSec= dist/speed + allWaypoints.length*hoverTime + (aeLock?3:0);
+    const areaM2   = polygonAreaM2(workingPolygon);
+    const gsd      = altM * SENSOR_W / (FOCAL_MM * IMG_W_PX) * 100;
+
+    document.getElementById('stat-strips').textContent    = totalStrips;
+    document.getElementById('stat-waypoints').textContent = allWaypoints.length;
+    document.getElementById('stat-distance').textContent  = isImperial
+      ? (dist*FT_PER_M >= 5280 ? (dist*FT_PER_M/5280).toFixed(2)+' mi' : Math.round(dist*FT_PER_M)+' ft')
+      : (dist >= 1000 ? (dist/1000).toFixed(2)+' km' : Math.round(dist)+' m');
+    document.getElementById('stat-time').textContent  = (flightSec/60).toFixed(1) + ' min';
+    document.getElementById('stat-photos').textContent= allWaypoints.length;
+    document.getElementById('stat-gsd').textContent   = gsd.toFixed(1) + ' cm';
+    document.getElementById('stat-area').textContent  = isImperial
+      ? (areaM2*ACRE_PER_M2).toFixed(2)+' acres'
+      : (areaM2*HA_PER_M2).toFixed(3)+' ha';
+
+    if (terrainResult) {
+      document.getElementById('stat-terrain-box').style.display = '';
+      document.getElementById('stat-terrain').textContent =
+        `${terrainResult.terrainMin.toFixed(0)} – ${terrainResult.terrainMax.toFixed(0)} m  (Δ${(terrainResult.terrainMax-terrainResult.terrainMin).toFixed(0)} m)`;
+    }
+
+    document.getElementById('warn-waypoints').style.display =
+      (allWaypoints.length > 2000) ? '' : 'none';
+
+    document.getElementById('btn-download').disabled = false;
+    setStatus(
+      `${allWaypoints.length} waypoints | ${totalStrips} strips | ${(dist/1000).toFixed(2)} km | ${(flightSec/60).toFixed(1)} min`,
+      'active'
+    );
+  } catch (err) {
+    setStatus('Error: ' + err.message, 'error');
+    console.error(err);
+  }
+  document.getElementById('btn-generate').disabled = false;
+}
+
+// ============================================================
+// Draw grid + footprints on map
+// ============================================================
+function drawGrid(waypoints, altitudes, polygonOutline, showFootprints) {
+  if (gridLayer) map.removeLayer(gridLayer);
+  if (footprintLayer) map.removeLayer(footprintLayer);
+
+  const group = L.layerGroup();
+
+  // Buffered polygon outline if different from drawn
+  if (bufferedLatLngs && polygonOutline === bufferedLatLngs) {
+    L.polygon(bufferedLatLngs, {
+      color: '#a371f7', weight: 1.5, fillOpacity: 0.04, dashArray: '4 4'
+    }).bindTooltip('Buffered polygon (after edge buffer)').addTo(group);
+  }
+
+  // Flight path polyline
+  L.polyline(waypoints, { color: '#2ea8d5', weight: 1.5, opacity: 0.7 }).addTo(group);
+
+  // Waypoint dots colored by altitude
+  const altMin = Math.min(...altitudes);
+  const altMax = Math.max(...altitudes);
+  const altRange = altMax - altMin;
+
+  waypoints.forEach((wp, i) => {
+    const a = altitudes[i];
+    let color = '#f0a500';
+    if (altRange > 1) {
+      const t = (a - altMin) / altRange;
+      if (t < 0.5) {
+        const r = Math.round(46 + t*2*(240-46));
+        const g = Math.round(168 + t*2*(165-168));
+        const b = Math.round(213 + t*2*(0-213));
+        color = `rgb(${r},${g},${b})`;
+      } else {
+        const s = (t-0.5)*2;
+        const r = Math.round(240 + s*(248-240));
+        const g = Math.round(165 + s*(81-165));
+        color = `rgb(${r},${g},0)`;
+      }
+    }
+    L.circleMarker(wp, {
+      radius: 3, color: color, fillColor: color,
+      fillOpacity: 0.9, weight: 0.5
+    }).bindTooltip('WP ' + i + '<br>Alt: ' + a.toFixed(1) + ' m', { sticky: true }).addTo(group);
+  });
+
+  // Start / end
+  if (waypoints.length > 0) {
+    L.circleMarker(waypoints[0], { radius: 7, color: '#3fb950', fillColor: '#3fb950', fillOpacity: 1, weight: 2 })
+      .bindTooltip('START').addTo(group);
+    L.circleMarker(waypoints[waypoints.length-1], { radius: 7, color: '#f85149', fillColor: '#f85149', fillOpacity: 1, weight: 2 })
+      .bindTooltip('END').addTo(group);
+  }
+
+  gridLayer = group.addTo(map);
+
+  // Camera footprints (separate layer for performance)
+  if (showFootprints) {
+    const fpGroup = L.layerGroup();
+    const renderer = L.canvas();
+    waypoints.forEach((wp, i) => {
+      const next = waypoints[i+1] || waypoints[i-1] || wp;
+      const corners = footprintRectangle(wp, next, altitudes[i]);
+      L.polygon(corners, {
+        renderer: renderer,
+        color: '#f0a500', weight: 0.5,
+        fillColor: '#f0a500', fillOpacity: 0.06,
+        interactive: false
+      }).addTo(fpGroup);
+    });
+    footprintLayer = fpGroup.addTo(map);
+  }
+
+  if (waypoints.length > 0) {
+    map.fitBounds(L.latLngBounds(waypoints), { padding: [30, 30] });
+  }
+}
+
+// ============================================================
+// KMZ / WPML
+// ============================================================
+function xmlEscape(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+          .replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+}
+
+function buildWPML(waypoints, altitudes, params, ts) {
+  const L = []; const a = s => L.push(s);
+  const author = params.missionName
+    ? params.missionName + ' (DJI Mission Planner v5)'
+    : 'DJI Mission Planner v5 (HTML)';
+  a('<?xml version="1.0" encoding="UTF-8"?>');
+  a('<kml xmlns="http://www.opengis.net/kml/2.2"');
+  a('     xmlns:wpml="http://www.dji.com/wpmz/1.0.2">');
+  a('  <Document>');
+  a(`    <wpml:author>${xmlEscape(author)}</wpml:author>`);
+  a(`    <wpml:createTime>${ts}</wpml:createTime>`);
+  a(`    <wpml:updateTime>${ts}</wpml:updateTime>`);
+  a('    <wpml:missionConfig>');
+  a('      <wpml:flyToWaylineMode>safely</wpml:flyToWaylineMode>');
+  a(`      <wpml:finishAction>${params.finishAction}</wpml:finishAction>`);
+  a('      <wpml:exitOnRCLost>goContinue</wpml:exitOnRCLost>');
+  a(`      <wpml:executeRCLostAction>${params.rcLost}</wpml:executeRCLostAction>`);
+  a(`      <wpml:globalTransitionalSpeed>${params.speed.toFixed(1)}</wpml:globalTransitionalSpeed>`);
+  a('      <wpml:droneInfo>');
+  a('        <wpml:droneEnumValue>67</wpml:droneEnumValue>');
+  a('        <wpml:droneSubEnumValue>0</wpml:droneSubEnumValue>');
+  a('      </wpml:droneInfo>');
+  a('    </wpml:missionConfig>');
+  a('    <Folder>');
+  a('      <wpml:templateId>0</wpml:templateId>');
+  a('      <wpml:executeHeightMode>relativeToStartPoint</wpml:executeHeightMode>');
+  a('      <wpml:waylineId>0</wpml:waylineId>');
+  a('      <wpml:distance>0</wpml:distance>');
+  a('      <wpml:duration>0</wpml:duration>');
+  a(`      <wpml:autoFlightSpeed>${params.speed.toFixed(1)}</wpml:autoFlightSpeed>`);
+
+  waypoints.forEach(([lon, lat], idx) => {
+    const alt = altitudes[idx];
+    const wpHover = (idx === 0 && params.aeLock)
+      ? Math.max(params.hoverTime, 3)
+      : params.hoverTime;
+    a('      <Placemark>');
+    a(`        <Point><coordinates>${lon.toFixed(8)},${lat.toFixed(8)}</coordinates></Point>`);
+    a(`        <wpml:index>${idx}</wpml:index>`);
+    a(`        <wpml:executeHeight>${alt.toFixed(2)}</wpml:executeHeight>`);
+    a(`        <wpml:waypointSpeed>${params.speed.toFixed(1)}</wpml:waypointSpeed>`);
+    a('        <wpml:waypointHeadingParam>');
+    a(`          <wpml:waypointHeadingMode>${params.headingMode}</wpml:waypointHeadingMode>`);
+    a('          <wpml:waypointHeadingAngle>0</wpml:waypointHeadingAngle>');
+    a('          <wpml:waypointPoiPoint>0.000000,0.000000,0.000000</wpml:waypointPoiPoint>');
+    a('          <wpml:waypointHeadingAngleEnable>0</wpml:waypointHeadingAngleEnable>');
+    a('          <wpml:waypointHeadingPathMode>followBadArc</wpml:waypointHeadingPathMode>');
+    a('        </wpml:waypointHeadingParam>');
+    a('        <wpml:waypointTurnParam>');
+    a('          <wpml:waypointTurnMode>toPointAndStopWithDiscontinuityCurvature</wpml:waypointTurnMode>');
+    a('          <wpml:waypointTurnDampingDist>0</wpml:waypointTurnDampingDist>');
+    a('        </wpml:waypointTurnParam>');
+    a('        <wpml:useStraightLine>1</wpml:useStraightLine>');
+    a('        <wpml:actionGroup>');
+    a(`          <wpml:actionGroupId>${idx}</wpml:actionGroupId>`);
+    a(`          <wpml:actionGroupStartIndex>${idx}</wpml:actionGroupStartIndex>`);
+    a(`          <wpml:actionGroupEndIndex>${idx}</wpml:actionGroupEndIndex>`);
+    a('          <wpml:actionGroupMode>sequence</wpml:actionGroupMode>');
+    a('          <wpml:actionTrigger>');
+    a('            <wpml:actionTriggerType>reachPoint</wpml:actionTriggerType>');
+    a('          </wpml:actionTrigger>');
+
+    let actionId = 0;
+    // Gimbal
+    a('          <wpml:action>');
+    a(`            <wpml:actionId>${actionId}</wpml:actionId>`);
+    a('            <wpml:actionActuatorFunc>gimbalRotate</wpml:actionActuatorFunc>');
+    a('            <wpml:actionActuatorFuncParam>');
+    a(`              <wpml:gimbalPitchRotateAngle>${params.gimbalPitch.toFixed(1)}</wpml:gimbalPitchRotateAngle>`);
+    a('              <wpml:gimbalRollRotateAngle>0</wpml:gimbalRollRotateAngle>');
+    a('              <wpml:gimbalYawRotateAngle>0</wpml:gimbalYawRotateAngle>');
+    a('              <wpml:gimbalRotateTimeEnable>0</wpml:gimbalRotateTimeEnable>');
+    a('              <wpml:gimbalRotateTime>0</wpml:gimbalRotateTime>');
+    a('              <wpml:payloadPositionIndex>0</wpml:payloadPositionIndex>');
+    a('            </wpml:actionActuatorFuncParam>');
+    a('          </wpml:action>');
+    actionId++;
+
+    // Hover
+    if (wpHover > 0) {
+      a('          <wpml:action>');
+      a(`            <wpml:actionId>${actionId}</wpml:actionId>`);
+      a('            <wpml:actionActuatorFunc>hover</wpml:actionActuatorFunc>');
+      a('            <wpml:actionActuatorFuncParam>');
+      a(`              <wpml:hoverTime>${wpHover.toFixed(1)}</wpml:hoverTime>`);
+      a('            </wpml:actionActuatorFuncParam>');
+      a('          </wpml:action>');
+      actionId++;
+    }
+
+    // Take photo
+    a('          <wpml:action>');
+    a(`            <wpml:actionId>${actionId}</wpml:actionId>`);
+    a('            <wpml:actionActuatorFunc>takePhoto</wpml:actionActuatorFunc>');
+    a('            <wpml:actionActuatorFuncParam>');
+    a('              <wpml:fileSuffix>waypoint</wpml:fileSuffix>');
+    a('              <wpml:payloadPositionIndex>0</wpml:payloadPositionIndex>');
+    a('            </wpml:actionActuatorFuncParam>');
+    a('          </wpml:action>');
+
+    a('        </wpml:actionGroup>');
+    a('      </Placemark>');
+  });
+
+  a('    </Folder>');
+  a('  </Document>');
+  a('</kml>');
+  return L.join('\n');
+}
+
+function buildTemplateKML(waypoints, altitudes, params, ts) {
+  const L = []; const a = s => L.push(s);
+  const meanAlt = altitudes.reduce((s,v)=>s+v,0) / altitudes.length;
+  const author = params.missionName
+    ? params.missionName + ' (DJI Mission Planner v5)'
+    : 'DJI Mission Planner v5 (HTML)';
+  a('<?xml version="1.0" encoding="UTF-8"?>');
+  a('<kml xmlns="http://www.opengis.net/kml/2.2"');
+  a('     xmlns:wpml="http://www.dji.com/wpmz/1.0.2">');
+  a('  <Document>');
+  a(`    <wpml:author>${xmlEscape(author)}</wpml:author>`);
+  a(`    <wpml:createTime>${ts}</wpml:createTime>`);
+  a(`    <wpml:updateTime>${ts}</wpml:updateTime>`);
+  a('    <wpml:missionConfig>');
+  a('      <wpml:flyToWaylineMode>safely</wpml:flyToWaylineMode>');
+  a('      <wpml:finishAction>goHome</wpml:finishAction>');
+  a('      <wpml:exitOnRCLost>goContinue</wpml:exitOnRCLost>');
+  a('      <wpml:executeRCLostAction>goBack</wpml:executeRCLostAction>');
+  a(`      <wpml:globalTransitionalSpeed>${params.speed.toFixed(1)}</wpml:globalTransitionalSpeed>`);
+  a('      <wpml:droneInfo>');
+  a('        <wpml:droneEnumValue>67</wpml:droneEnumValue>');
+  a('        <wpml:droneSubEnumValue>0</wpml:droneSubEnumValue>');
+  a('      </wpml:droneInfo>');
+  a('    </wpml:missionConfig>');
+  a('    <Folder>');
+  a('      <wpml:templateId>0</wpml:templateId>');
+  a('      <wpml:templateType>waypoint</wpml:templateType>');
+  a('      <wpml:waylineCoordinateSysParam>');
+  a('        <wpml:coordinateMode>WGS84</wpml:coordinateMode>');
+  a('        <wpml:heightMode>relativeToStartPoint</wpml:heightMode>');
+  a('      </wpml:waylineCoordinateSysParam>');
+  a(`      <wpml:autoFlightSpeed>${params.speed.toFixed(1)}</wpml:autoFlightSpeed>`);
+  a(`      <wpml:globalHeight>${meanAlt.toFixed(1)}</wpml:globalHeight>`);
+  a('      <wpml:caliFlightEnable>0</wpml:caliFlightEnable>');
+  a('      <wpml:gimbalPitchMode>usePointSetting</wpml:gimbalPitchMode>');
+
+  waypoints.forEach(([lon, lat], idx) => {
+    const alt = altitudes[idx];
+    a('      <Placemark>');
+    a(`        <Point><coordinates>${lon.toFixed(8)},${lat.toFixed(8)}</coordinates></Point>`);
+    a(`        <wpml:index>${idx}</wpml:index>`);
+    a(`        <wpml:ellipsoidHeight>${alt.toFixed(2)}</wpml:ellipsoidHeight>`);
+    a(`        <wpml:height>${alt.toFixed(2)}</wpml:height>`);
+    a('        <wpml:useGlobalHeight>0</wpml:useGlobalHeight>');
+    a('        <wpml:useGlobalSpeed>1</wpml:useGlobalSpeed>');
+    a('        <wpml:useGlobalHeadingParam>1</wpml:useGlobalHeadingParam>');
+    a('        <wpml:useGlobalTurnParam>1</wpml:useGlobalTurnParam>');
+    a(`        <wpml:gimbalPitchAngle>${params.gimbalPitch.toFixed(1)}</wpml:gimbalPitchAngle>`);
+    a('      </Placemark>');
+  });
+
+  a('    </Folder>');
+  a('  </Document>');
+  a('</kml>');
+  return L.join('\n');
+}
+
+function sanitizeFilename(s) {
+  return s.replace(/[^a-zA-Z0-9_-]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 60) || 'dji_mission';
+}
+
+async function downloadKMZ() {
+  if (!generatedWaypoints || !generatedAltitudes) {
+    setStatus('Generate a mission first.', 'error'); return;
+  }
+  const params = {
+    speed:        parseFloat(document.getElementById('speed').value),
+    gimbalPitch:  parseFloat(document.getElementById('gimbal_pitch').value),
+    headingMode:  document.getElementById('heading_mode').value,
+    finishAction: document.getElementById('finish_action').value,
+    rcLost:       document.getElementById('rc_lost').value,
+    hoverTime:    parseFloat(document.getElementById('hover_time').value || 0),
+    aeLock:       document.getElementById('ae_lock').checked,
+    missionName:  document.getElementById('mission_name').value.trim()
+  };
+
+  setStatusSpinner('Building KMZ...');
+  document.getElementById('btn-download').disabled = true;
+  try {
+    const ts   = Date.now();
+    const wpts = generatedWaypoints.map(([la, lo]) => [lo, la]);
+    const wpml = buildWPML(wpts, generatedAltitudes, params, ts);
+    const tmpl = buildTemplateKML(wpts, generatedAltitudes, params, ts);
+
+    const zip = new JSZip();
+    zip.folder('wpmz').file('waylines.wpml', wpml);
+    zip.folder('wpmz').file('template.kml', tmpl);
+
+    const blob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    const dateStr = new Date().toISOString().slice(0,10);
+    const baseName = params.missionName ? sanitizeFilename(params.missionName) : 'dji_mission';
+    a.href = url;
+    a.download = `${baseName}_${dateStr}.kmz`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    setStatus(`KMZ saved: ${a.download}`, 'active');
+  } catch (err) {
+    setStatus('KMZ build error: ' + err.message, 'error');
+  }
+  document.getElementById('btn-download').disabled = false;
+}
+
+// ============================================================
+// Wire up events
+// ============================================================
+document.getElementById('btn-draw').addEventListener('click', () => {
+  new L.Draw.Polygon(map, drawControl.options.draw.polygon).enable();
+  setStatus('Click the map to place vertices. Double-click to close.');
+});
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  if (drawnLayer) { map.removeLayer(drawnLayer); drawnLayer = null; }
+  if (homeMarker) { map.removeLayer(homeMarker); homeMarker = null; }
+  polygonLatLngs = null; homeLatLon = null; bufferedLatLngs = null;
+  clearGrid();
+  document.getElementById('terrain-info').style.display = 'none';
+  document.getElementById('stat-area').textContent = '—';
+  setStatus('Draw a polygon to begin.');
+});
+
+document.getElementById('btn-generate').addEventListener('click', generateMission);
+document.getElementById('btn-download').addEventListener('click', downloadKMZ);
+
+document.getElementById('terrain_follow').addEventListener('change', function() {
+  const el = document.getElementById('home-instruction');
+  if (this.checked) {
+    el.style.display = '';
+    isSettingHome = true;
+    map.getContainer().style.cursor = 'crosshair';
+    setStatus('Click the map to set your takeoff point.');
+  } else {
+    el.style.display = 'none';
+    isSettingHome = false;
+    map.getContainer().style.cursor = '';
+  }
+});
+
+['altitude','speed'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    validateInputs();
+    syncOverlapDropdowns();
+  });
+});
+['front_overlap','side_overlap'].forEach(id => {
+  document.getElementById(id).addEventListener('change', syncOverlapDropdowns);
+});
+
+document.getElementById('auto_strip_dir').addEventListener('change', function() {
+  document.getElementById('flight_dir').disabled = this.checked;
+});
+
+// Basemap toggle
+console.log('Attaching basemap toggle event handlers...');
+document.querySelectorAll('#basemap-toggle button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    console.log('Basemap button clicked:', this.dataset.bm);
+    document.querySelectorAll('#basemap-toggle button').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+    setBasemap(this.dataset.bm);
+  });
+});
+console.log('Basemap toggle handlers attached.');
+
+// Units toggle
+document.querySelectorAll('#units-toggle button').forEach(btn => {
+  btn.addEventListener('click', function() {
+    const newImperial = this.dataset.units === 'imperial';
+    if (newImperial === isImperial) return;
+    document.querySelectorAll('#units-toggle button').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+
+    // Convert displayed values when toggling
+    const inputs = ['altitude','strip_spacing','photo_interval','edge_buffer'];
+    inputs.forEach(id => {
+      const el = document.getElementById(id);
+      const v = parseFloat(el.value);
+      if (!isNaN(v)) {
+        // Convert from old unit to new unit
+        const m = isImperial ? v * M_PER_FT : v;       // current value in metres
+        el.value = (newImperial ? m * FT_PER_M : m).toFixed(2);
+      }
+    });
+    isImperial = newImperial;
+    applyUnits();
+    updateAreaPreview();
+    syncOverlapDropdowns();
+    validateInputs();
+  });
+});
+
+// Live update area on polygon edit
+if (map && L.Draw) {
+  map.on(L.Draw.Event.EDITED, function(e) {
+    e.layers.eachLayer(layer => {
+      drawnLayer = layer;
+      polygonLatLngs = layer.getLatLngs()[0].map(ll => [ll.lat, ll.lng]);
+    });
+    clearGrid();
+    updateAreaPreview();
+    setStatus('Polygon edited. Regenerate the mission.', 'warning');
+  });
+
+  map.on(L.Draw.Event.DELETED, function() {
+    drawnLayer = null; polygonLatLngs = null; bufferedLatLngs = null;
+    clearGrid();
+    document.getElementById('stat-area').textContent = '—';
+    setStatus('Draw a polygon to begin.');
+  });
+} else {
+  console.error('Map or Leaflet.draw failed to load. Try opening via local web server.');
+  document.getElementById('status-text').innerHTML = 
+    '⚠️ Map failed to load. <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS" target="_blank" style="color:#f0a500">CORS/file:// issue</a>. Use local web server or open in Chrome with --allow-file-access-from-files';
+}
+
+// Init
+console.log('=== DJI Mission Planner Diagnostics ===');
+console.log('Leaflet loaded:', typeof L !== 'undefined');
+console.log('Leaflet.draw loaded:', typeof L !== 'undefined' && typeof L.Draw !== 'undefined');
+console.log('JSZip loaded:', typeof JSZip !== 'undefined');
+
+if (typeof L === 'undefined') {
+  document.getElementById('status-text').innerHTML = 
+    '⚠️ Leaflet library failed to load from CDN.<br>' +
+    'Open this file via a local web server: <code>python -m http.server 8000</code>';
+  document.getElementById('status-dot').className = 'error';
+  console.error('CRITICAL: Leaflet not loaded.');
+} else {
+  console.log('Initializing map...');
+  initMap();
+  console.log('Map initialized:', map ? 'SUCCESS' : 'FAILED');
+  
+  applyUnits();
+  validateInputs();
+  syncOverlapDropdowns();
+  
+  // Check if basemap toggle event handler attached
+  const basemapButtons = document.querySelectorAll('#basemap-toggle button');
+  console.log('Basemap toggle buttons found:', basemapButtons.length);
+  
+  // Warn if JSZip is missing
+  if (typeof JSZip === 'undefined') {
+    console.warn('JSZip not loaded - KMZ download will fail.');
+    setStatus('Map loaded, but KMZ export unavailable (JSZip missing)', 'warning');
+  }
+  
+  // Warn if Leaflet.draw is missing
+  if (typeof L.Draw === 'undefined') {
+    console.error('Leaflet.draw not loaded - polygon drawing will fail.');
+    setStatus('Map loaded, but drawing tools unavailable (Leaflet.draw missing)', 'warning');
+  }
+}
+</script>
+</body>
+</html>
