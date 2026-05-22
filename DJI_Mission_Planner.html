@@ -295,6 +295,7 @@ body {
           <label>Basemap</label>
           <div class="toggle-group" id="basemap-toggle">
             <button class="active" data-bm="osm">Street (OSM)</button>
+            <button data-bm="osmb">Buildings (OSM)</button>
             <button data-bm="esri">Imagery (ESRI)</button>
           </div>
         </div>
@@ -423,8 +424,8 @@ body {
         <div class="field">
           <label>Heading Mode</label>
           <select id="heading_mode">
-            <option value="followWayline" selected>Follow Wayline</option>
-            <option value="fixed">Fixed</option>
+            <option value="followWayline">Follow Wayline</option>
+            <option value="fixed" selected>Fixed</option>
             <option value="smoothTransition">Smooth Transition</option>
           </select>
         </div>
@@ -539,7 +540,7 @@ let homeMarker = null, homeLatLon = null;
 let isSettingHome = false;
 let isImperial = false;
 
-let osmLayer = null, esriLayer = null, esriLabels = null;
+let osmLayer = null, osmBuildingsLayer = null, esriLayer = null, esriLabels = null;
 
 let generatedWaypoints = null;
 let generatedAltitudes = null;
@@ -559,6 +560,15 @@ function initMap() {
       maxZoom: 20
     }
   ).addTo(map);
+
+  // Standard OSM tiles - prominently render building footprints
+  osmBuildingsLayer = L.tileLayer(
+    'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+    {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+      maxZoom: 19
+    }
+  );
 
   esriLayer = L.tileLayer(
     'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
@@ -624,16 +634,22 @@ function initMap() {
 // ============================================================
 function setBasemap(which) {
   console.log('Switching basemap to:', which);
+  // Remove all base layers first
+  if (map.hasLayer(osmLayer)) map.removeLayer(osmLayer);
+  if (map.hasLayer(osmBuildingsLayer)) map.removeLayer(osmBuildingsLayer);
+  if (map.hasLayer(esriLayer)) map.removeLayer(esriLayer);
+  if (map.hasLayer(esriLabels)) map.removeLayer(esriLabels);
+
   if (which === 'esri') {
-    map.removeLayer(osmLayer);
     esriLayer.addTo(map);
     esriLabels.addTo(map);
     console.log('ESRI imagery layer added');
+  } else if (which === 'osmb') {
+    osmBuildingsLayer.addTo(map);
+    console.log('OSM Standard (buildings) layer added');
   } else {
-    if (map.hasLayer(esriLayer)) map.removeLayer(esriLayer);
-    if (map.hasLayer(esriLabels)) map.removeLayer(esriLabels);
     osmLayer.addTo(map);
-    console.log('OSM layer added');
+    console.log('OSM Voyager layer added');
   }
 }
 
@@ -1333,8 +1349,13 @@ function buildWPML(waypoints, altitudes, params, ts) {
     a(`            <wpml:actionId>${actionId}</wpml:actionId>`);
     a('            <wpml:actionActuatorFunc>gimbalRotate</wpml:actionActuatorFunc>');
     a('            <wpml:actionActuatorFuncParam>');
+    a('              <wpml:gimbalHeadingYawBase>aircraft</wpml:gimbalHeadingYawBase>');
+    a('              <wpml:gimbalRotateMode>absoluteAngle</wpml:gimbalRotateMode>');
+    a('              <wpml:gimbalPitchRotateEnable>1</wpml:gimbalPitchRotateEnable>');
     a(`              <wpml:gimbalPitchRotateAngle>${params.gimbalPitch.toFixed(1)}</wpml:gimbalPitchRotateAngle>`);
+    a('              <wpml:gimbalRollRotateEnable>0</wpml:gimbalRollRotateEnable>');
     a('              <wpml:gimbalRollRotateAngle>0</wpml:gimbalRollRotateAngle>');
+    a('              <wpml:gimbalYawRotateEnable>0</wpml:gimbalYawRotateEnable>');
     a('              <wpml:gimbalYawRotateAngle>0</wpml:gimbalYawRotateAngle>');
     a('              <wpml:gimbalRotateTimeEnable>0</wpml:gimbalRotateTimeEnable>');
     a('              <wpml:gimbalRotateTime>0</wpml:gimbalRotateTime>');

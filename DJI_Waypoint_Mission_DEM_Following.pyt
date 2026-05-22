@@ -206,7 +206,7 @@ class GenerateWaypointMission(object):
                             parameterType="Required", direction="Input")
         p.filter.type = "ValueList"
         p.filter.list = ["followWayline", "fixed", "smoothTransition"]
-        p.value = "followWayline"
+        p.value = "fixed"
         params.append(p)
 
         # 17 - Finish action
@@ -1197,8 +1197,13 @@ class GenerateWaypointMission(object):
             a('            <wpml:actionId>{}</wpml:actionId>'.format(action_id))
             a('            <wpml:actionActuatorFunc>gimbalRotate</wpml:actionActuatorFunc>')
             a('            <wpml:actionActuatorFuncParam>')
+            a('              <wpml:gimbalHeadingYawBase>aircraft</wpml:gimbalHeadingYawBase>')
+            a('              <wpml:gimbalRotateMode>absoluteAngle</wpml:gimbalRotateMode>')
+            a('              <wpml:gimbalPitchRotateEnable>1</wpml:gimbalPitchRotateEnable>')
             a('              <wpml:gimbalPitchRotateAngle>{:.1f}</wpml:gimbalPitchRotateAngle>'.format(gimbal_pitch))
+            a('              <wpml:gimbalRollRotateEnable>0</wpml:gimbalRollRotateEnable>')
             a('              <wpml:gimbalRollRotateAngle>0</wpml:gimbalRollRotateAngle>')
+            a('              <wpml:gimbalYawRotateEnable>0</wpml:gimbalYawRotateEnable>')
             a('              <wpml:gimbalYawRotateAngle>0</wpml:gimbalYawRotateAngle>')
             a('              <wpml:gimbalRotateTimeEnable>0</wpml:gimbalRotateTimeEnable>')
             a('              <wpml:gimbalRotateTime>0</wpml:gimbalRotateTime>')
